@@ -1,0 +1,117 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+paths:
+  /coop:
+    post:
+      operationId: coopCommand
+      summary: Create, join, or operate a private cooperative mission room
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CoopInput"
+      responses:
+        "200":
+          description: Room state and private participant identity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoopResponse"
+        "400":
+          description: Invalid command
+        "403":
+          description: Participant or role permission denied
+        "404":
+          description: Room expired or not found
+        "409":
+          description: Room or mission state conflict
+        "429":
+          description: Too many requests
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+components:
+  schemas:
+    CoopInput:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [create, join, poll, settings, ready, start, restartSelection, command, snapshot, leave]
+        code:
+          type: string
+          maxLength: 6
+        token:
+          type: string
+          maxLength: 80
+        name:
+          type: string
+          minLength: 1
+          maxLength: 24
+        size:
+          type: integer
+          minimum: 2
+          maximum: 4
+        level:
+          type: integer
+          minimum: 1
+          maximum: 5
+        goal:
+          type: string
+          maxLength: 30
+        command:
+          type: string
+          enum: [pickPower, toggleInst, pickComms, pickRocket, pickOrbit, option]
+        value:
+          type: string
+          maxLength: 50
+        event:
+          type: string
+          maxLength: 100
+        ack:
+          type: integer
+          minimum: 0
+        snapshot:
+          type: object
+          additionalProperties: true
+    CoopResponse:
+      type: object
+      required: [room, playerId]
+      properties:
+        room:
+          type: object
+          additionalProperties: true
+        playerId:
+          type: string
+        token:
+          type: string
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
